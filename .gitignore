@@ -1,0 +1,32 @@
+﻿# Local-only folders
+Compressed/
+Deprecated/
+ExtensionPresentation/
+presentation/
+docs/
+
+# Zip files
+*.zip
+
+# Local dev / diagnostic tools
+probe.py
+logs/
+devtools/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+
+# Dependencies / backups / runtime leftovers
+node_modules/
+*.bak
+*.bak[0-9]*
+*.v2.bak
+*.pyc
+.restart_bridge.lock
+_grab.png
+agent_log.txt
+browser_cmd.json
+browser_result.json

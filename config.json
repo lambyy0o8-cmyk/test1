@@ -1,0 +1,60 @@
+{
+  "mcpServers": {
+    "roblox": {
+      "command": "launch_studio_mcp.py",
+      "args": [],
+      "enabled": false
+    },
+    "vscode": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\lamby\\Downloads\\test1\\vscode_mcp_server.py"
+      ],
+      "enabled": true
+    },
+    "blender": {
+      "command": "C:\\Users\\lamby\\AppData\\Local\\pipx\\pipx\\venvs\\blender-mcp\\Scripts\\blender-mcp.exe",
+      "args": [],
+      "enabled": false
+    },
+    "discord": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-discord"
+      ],
+      "env": {
+        "DISCORD_TOKEN": "ВСТАВЬ_СЮДА_ТОКЕН_ДИСКОРД_БОТА"
+      }
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "godot": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "set",
+        "GODOT_PATH=C:\\Users\\lamby\\OneDrive\\Desktop\\Проги\\Godot_v4.7.1-stable_win64.exe",
+        "&&",
+        "npx",
+        "-y",
+        "@coding-solo/godot-mcp"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ВСТАВЬ_СЮДА_ТОКЕН_GITHUB"
+      }
+    }
+  }
+}
