@@ -67,5 +67,42 @@ document.getElementById("settings").addEventListener("click", () => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg && msg.type === "zs-status") render(msg);
 });
+
+// ── Меню функций ──────────────────────────────────────────────────────────
+const funcBtn = document.getElementById("funcs");
+const funcMenu = document.getElementById("funcmenu");
+funcBtn.addEventListener("click", () => {
+  funcMenu.style.display = funcMenu.style.display === "none" ? "block" : "none";
+});
+
+// Отправить действие в активную вкладку поддерживаемого AI-сайта (если есть).
+function withAiTab(fn) {
+  chrome.tabs.query({}, (tabs) => {
+    const t = tabs.find((x) => x.active && x.url && SUPPORTED_HOSTS.some((h) => x.url.includes(h)))
+      || tabs.find((x) => x.url && SUPPORTED_HOSTS.some((h) => x.url.includes(h)));
+    fn(t);
+  });
+}
+
+document.querySelectorAll(".fm").forEach((b) => {
+  b.addEventListener("click", () => {
+    const act = b.dataset.act;
+    if (act === "open-roblox") {
+      chrome.runtime.sendMessage({ type: "restart_mcp" }, () => setTimeout(refresh, 600));
+    } else if (act === "list-tools") {
+      withAiTab((t) => {
+        if (t) { chrome.tabs.sendMessage(t.id, { type: "zs-open-menu" }); chrome.tabs.update(t.id, { active: true }); }
+        else chrome.tabs.create({ url: DEFAULT_AI_URL });
+      });
+    } else if (act === "new-chat") {
+      chrome.tabs.create({ url: DEFAULT_AI_URL });
+    } else if (act === "open-log") {
+      chrome.runtime.sendMessage({ type: "open_log" });
+    } else if (act === "reload-ext") {
+      chrome.runtime.reload();
+    }
+  });
+});
+
 refresh();
 setInterval(refresh, 2000);

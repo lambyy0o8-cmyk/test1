@@ -1,0 +1,15 @@
+{
+  "name": "lambyy-app",
+  "version": "1.0.0",
+  "description": "LamByy desktop - chat via DeepSeek tab + Roblox bridge control",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

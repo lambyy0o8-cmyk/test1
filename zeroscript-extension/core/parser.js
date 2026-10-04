@@ -50,6 +50,12 @@ const ZSParse = (() => {
     return code.replace(/^(?:json|copy)\s+/i, "");
   }
 
+  // A plain-English connect trigger: `connect to "X"` / `подключись к "X"`.
+  // Lets the user type a natural phrase (in ANY chat, even a long-running one)
+  // instead of the JSON envelope, and it maps to the bridge's add_server.
+  // Group 1 is the target name (required, in straight or curly quotes).
+  const CONNECT_TO_RE = /\bconnect(?:\s+to|_server)?[ \t]+["\u201c'\u2018]?([A-Za-z0-9_.\/ -]{1,80}?)["\u201d'\u2019]?(?=[\r\n]|$)/im;
+
   // A command is `{"command":"name", ...}` (or "tool"). The params/arguments
   // object is OPTIONAL: paramless commands like list_commands are written as
   // `{"command":"list_commands"}`, so requiring "params" too would MISS them
@@ -83,7 +89,9 @@ const ZSParse = (() => {
       r.includes(START_M) ||
       r.includes("MCP_TOOL") ||
       LUA_START_RE.test(r) ||
-      CMD_KEY_RE.test(r)
+      CMD_KEY_RE.test(r) ||
+      CONNECT_TO_RE.test(r) ||
+      /\bconnect\s+to\s+[A-Za-z0-9_.\/-]{1,60}/i.test(r)
     );
   }
 
@@ -188,6 +196,19 @@ const ZSParse = (() => {
     }
   }
 
+  // Pull a `connect to "X"` phrase out of the reply text. Returns a call
+  // object in the SAME shape as a JSON command (tool + arguments), so the rest
+  // of the pipeline treats it identically - the loop dispatches it, runTool
+  // turns it into add_server. The target string is normalised (trimmed) and
+  // kept as the server_id; a bare `connect to X` (no quotes) is ALSO accepted
+  // so a user can just type the name.
+  function extractConnectTo(text) {
+    const m = CONNECT_TO_RE.exec(text);
+    const name = m ? m[1].trim() : null;
+    if (!name || name.toLowerCase() === "to") return null;
+    return { tool: "connect_server", arguments: { name } };
+  }
+
   function extractToolAnywhere(text) {
     for (const key of ['"command"', '"tool"']) {
       let pos = 0;
@@ -259,6 +280,12 @@ const ZSParse = (() => {
       if (ls !== -1 && le !== -1 && le > ls) {
         out.push({ tool: "execute_luau", arguments: { code: stripCodeChrome(r.slice(ls + luaLen, le).trim()), datamodel_type: dm } });
       }
+    }
+    // Plain-English `connect to "X"` phrase (any chat, any time). Checked LAST
+    // so a proper JSON command always wins if the model wrote both.
+    if (out.length === 0) {
+      const c = extractConnectTo(r);
+      if (c) out.push(c);
     }
     return out.map(cleanLuaCall);
   }
@@ -345,6 +372,7 @@ const ZSParse = (() => {
     const m = txt.match(/"(?:command|tool)"\s*:\s*"([^"]*)/);
     if (m && m[1].trim()) return m[1].trim();
     if (txt.includes("execute_luau") || LUA_START_RE.test(txt)) return "execute_luau";
+    if (CONNECT_TO_RE.test(txt)) return "connect_server";
     return "command";
   }
 
@@ -371,12 +399,13 @@ const ZSParse = (() => {
     return txt.includes(START_M) ||
            LUA_START_RE.test(txt) ||
            DSML_RE.test(txt) ||
+           CONNECT_TO_RE.test(txt) ||
            CMD_KEY_RE.test(txt); // command/tool with OR without params (e.g. list_commands)
   }
 
   return {
-    START_M, END_M, LUA_START_RE, LUA_END_RE, CMD_KEY_RE, DSML_RE,
-    findLuaStart, findLuaEnd, matchBrace, extractJson, normalizeCall,
+    START_M, END_M, LUA_START_RE, LUA_END_RE, CMD_KEY_RE, DSML_RE, CONNECT_TO_RE,
+    findLuaStart, findLuaEnd, matchBrace, extractJson, normalizeCall, extractConnectTo,
     hasToolSignature, hasOpenToolBlock, parseToolCalls, salvageCutOff, toolNameFromText,
     isInjectedFeedback, hasCommandShape,
   };

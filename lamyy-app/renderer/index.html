@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://api.deepseek.com" />
+<title>LamByy System v7.3</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <span class="brand-name">LamByy</span>
+        <span class="ver">v7.3</span>
+      </div>
+
+      <div class="status" id="statusBox">
+        <span id="dot" class="dot"></span>
+        <div class="status-tx">
+          <div class="row" id="state">Bridge: …</div>
+        </div>
+      </div>
+      <div id="servers" class="servers"></div>
+
+      <div class="sect">Функции</div>
+      <button class="ghost" id="f-restart">⟳ Перезапустить bridge</button>
+      <button class="ghost" id="f-tools">🧰 Список команд</button>
+      <button class="ghost" id="f-log-actions">📜 Лог действий</button>
+      <button class="ghost" id="f-log-debug">🐞 Debug-лог</button>
+      <button class="ghost" id="f-log-errors">⚠ Лог ошибок</button>
+      <button class="ghost" id="f-clear">🗑 Очистить чат</button>
+
+      <div class="hint">
+        Сообщения уходят в открытую вкладку DeepSeek с расширением ZeroScript.
+        Открой её и убедись, что сессия агента запущена.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="chat" id="chat"></div>
+      <button class="jump" id="jump" hidden>↓ Вниз</button>
+      <div class="composer">
+        <textarea id="input" rows="1" placeholder="Напиши сообщение… (Enter — отправить, Shift+Enter — новая строка)"></textarea>
+        <button id="send">Отправить</button>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

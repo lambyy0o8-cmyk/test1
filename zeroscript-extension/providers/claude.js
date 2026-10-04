@@ -88,11 +88,48 @@ const ZSProvider = (() => {
     return e.tagName === 'TEXTAREA' ? e.value : (e.innerText || e.textContent || '');
   };
 
+  // While the agent works, the (large) system prompt / tool results are typed
+  // into the composer. claude.ai's card grows to fit them and shrinks again after
+  // each send, which shoves the whole chat up and down ("shaking"). So the editor
+  // keeps the height it had when the lock started; its content is untouched and
+  // is still sent in full. A light timer re-applies the freeze because React may
+  // swap the editor node (e.g. when a fresh chat turns into /chat/<id>).
+  let lockH = 0;
+  let lockTimer = 0;
+  function freezeEditor(ed) {
+    if (!ed || !lockH) return;
+    const px = lockH + 'px';
+    if (ed.style.height !== px) {
+      ed.style.setProperty('height', px, 'important');
+      ed.style.setProperty('min-height', px, 'important');
+      ed.style.setProperty('max-height', px, 'important');
+      ed.style.setProperty('overflow', 'hidden', 'important');
+    }
+  }
+  function unfreezeEditor(ed) {
+    if (!ed) return;
+    ['height', 'min-height', 'max-height', 'overflow'].forEach((p) => ed.style.removeProperty(p));
+  }
   function setInputLock(on) {
     const ed = getEditor();
-    if (!ed) return;
-    if (on) ed.setAttribute('data-zs-locked', '1');
-    else ed.removeAttribute('data-zs-locked');
+    if (on) {
+      if (!lockH && ed) lockH = Math.max(24, Math.round(ed.getBoundingClientRect().height));
+      if (ed) { ed.setAttribute('data-zs-locked', '1'); freezeEditor(ed); }
+      if (!lockTimer) {
+        lockTimer = setInterval(() => {
+          const cur = getEditor();
+          if (cur) { cur.setAttribute('data-zs-locked', '1'); freezeEditor(cur); }
+        }, 200);
+      }
+    } else {
+      clearInterval(lockTimer);
+      lockTimer = 0;
+      lockH = 0;
+      document.querySelectorAll('[data-zs-locked]').forEach((e) => {
+        e.removeAttribute('data-zs-locked');
+        unfreezeEditor(e);
+      });
+    }
   }
 
   // The composer "card" = the nearest rounded ancestor of the editor that is
@@ -132,10 +169,40 @@ const ZSProvider = (() => {
   // ── Reading replies ────────────────────────────────────────────
   // innerText keeps line breaks between paragraphs / code lines (textContent
   // glues them together), which the command parser relies on.
-  function itemText(item) {
-    return item ? (item.innerText || item.textContent || '') : '';
+  // IMPORTANT: this must NOT use innerText. innerText skips elements that are
+  // display:none, and the core hides the raw command block (zs-tool-hide /
+  // zs-hidden) once it has drawn its chip. With innerText the turn then reads as
+  // plain prose, the core concludes "no command here", strips the chip and shows
+  // the raw block again, the next sweep sees the command, hides it... and the
+  // reply flips between the two states several times a second (the visible
+  // "shaking"). Every other provider reads textContent for the same reason.
+  // So walk the DOM ourselves: hidden text still counts, our own chip / panel
+  // and the reasoning area never do, and block boundaries become newlines (the
+  // command parser relies on line breaks, which plain textContent would glue).
+  const BLOCK_TAGS = /^(P|DIV|LI|UL|OL|PRE|H[1-6]|TABLE|TR|BLOCKQUOTE|SECTION|ARTICLE)$/;
+  function textWithout(root, excludeSel) {
+    if (!root) return '';
+    let out = '';
+    const nl = () => { if (out && !out.endsWith('\n')) out += '\n'; };
+    const walk = (n) => {
+      if (n.nodeType === 3) { out += n.nodeValue; return; }
+      if (n.nodeType !== 1) return;
+      if (n.id === 'zs-root') return;
+      if (n !== root) {
+        if (excludeSel && n.matches(excludeSel)) return;
+        if (n.matches(S.thinking)) return;
+      }
+      if (n.tagName === 'BR') { out += '\n'; return; }
+      const blk = BLOCK_TAGS.test(n.tagName);
+      if (blk) nl();
+      for (const c of n.childNodes) walk(c);
+      if (blk) nl();
+    };
+    walk(root);
+    return out;
   }
-  function classifyText(item) { return itemText(item); }
+  function itemText(item) { return textWithout(item, '.zs-chip'); }
+  function classifyText(item, excludeSel) { return textWithout(item, excludeSel || '.zs-chip'); }
 
   function readAssistant() {
     const item = lastAssistant();

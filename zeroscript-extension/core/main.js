@@ -186,6 +186,10 @@
     parked: false,
     // Timestamp of the last successful tool-catalogue refresh (see ensureTools).
     toolsAt: 0,
+    // Last non-empty text seen in the composer (see scheduleSweep). The send
+    // hooks fire after the site clears the textarea, so the typed `connect to
+    // "X"` control phrase is read from here instead.
+    lastTyped: "",
   };
 
   async function waitFor(pred, timeout) {
@@ -833,6 +837,18 @@
   // error on non-vision providers, so nothing needs to be predicted here.
   const ALWAYS_BLOCKED_TOOLS = new Set(["subagent"]);
   const VISION_TOOLS = new Set(["screen_capture"]);
+  // Built-in launch specs for `connect to "X"`. The bridge's add_server needs a
+  // command + args, but the user only types a name - so the name has to resolve
+  // here. Keep this list short and to servers that launch from a single npx/uvx
+  // command with no local setup. Anything else must be added via the settings UI
+  // (Add server), where the user can type its real command.
+  const KNOWN_SERVERS = {
+    godot:    { command: "npx", args: ["-y", "@coding-solo/godot-mcp"] },
+    blender:  { command: "uvx", args: ["blender-mcp"] },
+    github:   { command: "npx", args: ["-y", "@modelcontextprotocol/server-github"] },
+    filesystem: { command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "."] },
+    vscode:   { command: "python", args: ["vscode_mcp_server.py"] },
+  };
   const bareToolName = (name) => (name && name.includes("/") ? name.split("/").pop() : name) || "";
   // Is `name` a tool we actually have? The bridge ADVERTISES names that may carry
   // a per-server prefix when two MCP servers expose the same tool (see
@@ -954,6 +970,60 @@
         `Connected MCP servers (${lines.length}):\n${lines.join("\n")}\n` +
         `Use list_commands with a "server" param (one of the ids above) to see that server's exact commands. Without "server", list_commands defaults to "${A.activeTarget || "roblox"}".`
       );
+    }
+    // Virtual command: `connect to "X"` (parsed as connect_server). The user
+    // can type the plain phrase in ANY chat (even a long-running one) and the
+    // extension turns it into a bridge add_server. The bridge only persists a
+    // server spec (command + args), so the target must resolve to one we know
+    // how to launch - see KNOWN_SERVERS below. Already-connected servers just
+    // report their state; unknown ones get a clear error listing what IS known.
+    if (name === "connect_server") {
+      const want = String(args.name || "").trim();
+      if (!want) return "ERROR: connect_server needs a server name, e.g. connect to \"godot\".";
+      await ensureTools();
+      const servers = (A.bridge && A.bridge.servers) || [];
+      // Normalise the typed name: "VS Code", "vs-code", "vs code" all mean the
+      // same server. Strip spaces/dashes so they collapse onto the built-in id.
+      const id = want.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/^$/, "");
+      const ALIASES = { code: "vscode", vsc: "vscode", vs: "vscode" };
+      const resolved = ALIASES[id] || id;
+      if (servers.some((sv) => sv.id === resolved)) {
+        const sv = servers.find((s2) => s2.id === resolved);
+        return `Output of 'connect_server':\nAlready connected: ${resolved} (${sv.alive ? (sv.tools || 0) + " commands" : "offline"}). No change needed.`;
+      }
+      const spec = KNOWN_SERVERS[resolved];
+      if (!spec) {
+        return `Output of 'connect_server':\nERROR: no known server '${want}'. Known: ${Object.keys(KNOWN_SERVERS).join(", ")}. Tell the user this name is not in the extension's built-in list.`;
+      }
+      const r = await bg({ type: "add_server", server_id: resolved, command: spec.command, args: spec.args, env: spec.env });
+      if (!r || !r.ok) return `Output of 'connect_server':\nERROR: could not add '${resolved}': ${(r && r.error) || "bridge unreachable"}.`;
+      ui.toast(`Connecting to ${resolved}… the bridge is restarting`);
+      // The bridge restarts itself to load the new config, which drops the
+      // socket. Returning right away made the model's NEXT command (e.g.
+      // list_commands {server}) hit a dead bridge or a stale 30s tool cache, so
+      // the model concluded "not connected". Wait for the bridge to come back
+      // and report the new server, then refresh the catalogue.
+      await sleep(1500); // let the old process actually go down first
+      const waitUntil = Date.now() + 45000;
+      let seen = null;
+      while (Date.now() < waitUntil && !A.stop) {
+        const st = await bg({ type: "status" });
+        if (st && st.connected) {
+          A.bridge = st;
+          const sv = (st.servers || []).find((x) => x.id === resolved);
+          if (sv) { seen = sv; break; }
+        }
+        await sleep(1000);
+      }
+      if (!seen) {
+        return `Output of 'connect_server':\nERROR: '${resolved}' was added to config.json, but it did not show up after the bridge restart (waited 45s). Either the bridge is still restarting or the server failed to launch (is its command installed? vscode needs python and vscode_mcp_server.py next to the bridge). Tell the user; do not retry automatically.`;
+      }
+      await ensureTools(true);
+      const sv2 = ((A.bridge && A.bridge.servers) || []).find((x) => x.id === resolved) || seen;
+      if (!sv2.alive) {
+        return `Output of 'connect_server':\nConnected to the bridge, but '${resolved}' is OFFLINE (it was registered yet failed to start). Tell the user to check that its command is installed; do not retry automatically.`;
+      }
+      return `Output of 'connect_server':\nConnected: ${resolved} (${sv2.tools || 0} commands). Call list_commands with "server": "${resolved}" to see them.`;
     }
     // Virtual command: list available commands with full details. Defaults to
     // the primary Roblox server - a DIFFERENT server's tools only ever show up
@@ -4535,6 +4605,11 @@
     sweepScheduled = true;
     const run = () => {
       sweepScheduled = false;
+      // Remember the last non-empty text the user had in the composer. The
+      // send hooks fire AFTER DeepSeek clears the textarea, so reading it there
+      // returns "" and a typed `connect to "X"` would be missed. This snapshot
+      // is the fallback that makes the interception reliable.
+      try { const t = (P.editorText ? P.editorText() : "").trim(); if (t) A.lastTyped = t; } catch {}
       syncSessionState();
       if (P.enforceComposer) P.enforceComposer();  // keep the composer in the provider's required modes
       ui.updateStartGate(); // block the input until a session is started
@@ -4604,6 +4679,21 @@
       A.userStopped = false;
       bumpSys("users");
       captureSendToken(); // identity of the assistant turn before this reply
+      // Direct `connect to "X"` typed BY THE USER: handle it WITHOUT asking the
+      // AI. The phrase is a ZeroScript control, not a prompt - forwarding it to
+      // the model just gets a wall of prose (the model has no way to connect
+      // anything itself). P.editorText() is still the user's text at this point
+      // (the hooks fire before the composer clears), so we can read it here.
+      const typed = ((P.editorText ? P.editorText() : "") || A.lastTyped || "").trim();
+      const direct = ZSParse.extractConnectTo ? ZSParse.extractConnectTo(typed) : null;
+      if (direct) {
+        diag("user.connect", { name: direct.arguments.name });
+        runTool(direct).then((fb) => {
+          const body = stripOutputPrefix(fb).split("\n")[0] || fb;
+          ui.toast(body.slice(0, 90));
+        });
+        return; // do NOT start the agent loop for a control phrase
+      }
       // A Stop clicked during this 300ms window sets A.userStopped → honor it and
       // do NOT start the loop (otherwise the stop is silently ignored and the
       // freshly-started loop strands the "Stopping…" flag).

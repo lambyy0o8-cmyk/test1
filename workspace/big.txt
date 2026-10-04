@@ -1,0 +1,31 @@
+﻿
+    MB FullName                                                                                                                                                                           
+    -- --------                                                                                                                                                                           
+7807,7 C:\Users\lamby\Downloads\Win11_25H2_Russian_x64_v2.iso                                                                                                                             
+ 233,1 C:\Users\lamby\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-07f806f999227108933c2e30515b26eecc1fda74.exe                                                             
+ 180,9 C:\Users\lamby\AppData\Local\Temp\yabroupdater.tmp                                                                                                                                 
+ 172,5 C:\Users\lamby\Downloads\test1\lamyy-app\node_modules\electron\dist\electron.exe                                                                                                   
+   115 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.NetCore.Toolset.10.0.401-servicing.26423.113.D49665110CF979931BB9\dotnet-sdk-internal-10.0.401-servicing.26423.113-win-x64.msi
+   110 C:\Users\lamby\Downloads\test1.zip                                                                                                                                                 
+ 102,4 C:\Users\lamby\Downloads\2026-09-29 16-15-39.mp4                                                                                                                                   
+  66,7 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VC.14.51.CRT.x64.OneCore.Desktop.base.FAAF3B69EA3C558C6998\Microsoft.VC.14.51.CRT.x64.OneCore.Desktop.base.vsix               
+  63,2 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VC.14.51.CRT.x86.OneCore.Desktop.base.966C90CD16C485475F04\Microsoft.VC.14.51.CRT.x86.OneCore.Desktop.base.vsix               
+  62,9 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VC.14.51.CRT.x64.Desktop.base.CD3EED09FB1BD3FF536A\Microsoft.VC.14.51.CRT.x64.Desktop.base.vsix                               
+  60,4 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.CodeAnalysis.VisualStudio.ServiceHub.Setup.x64.EFE376E90BB117A48456\Roslyn.VisualStudio.ServiceHub.Setup.x64.vsix             
+  60,2 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VisualStudio.TestTools.TestPlatform.IDE.ACAD262B28E27B61DF50\Microsoft.VisualStudio.TestWindow.Setup.vsix                     
+  56,7 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VC.14.51.CRT.x86.Desktop.base.8614CE5359F1C74F6C0D\Microsoft.VC.14.51.CRT.x86.Desktop.base.vsix                               
+  52,6 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.CodeAnalysis.VisualStudio.Setup.9C173DE85EAF974D1C45\Roslyn.VisualStudio.Setup.vsix                                           
+  48,1 C:\Users\lamby\AppData\Local\Temp\VS\Setup\3b65be0a-98e9-4c4d-82b0-4d609c7ec059\vs_installer.opc                                                                                   
+  47,2 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VisualStudio.TeamExplorer.3A87716BE46C479983CF\Microsoft.VisualStudio.TeamExplorer.vsix                                       
+  46,9 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VisualStudio.MinShell.Targeted.9751995EFA39F40BEEA3\Microsoft.VisualStudio.MinShell.x64.vsix                                  
+  46,2 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.Net.10.0.Runtime.9203A3E24AB9EE6CEF1E\aspnetcore-runtime-x64.zip                                                              
+  43,4 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.Net.8.0.Runtime.3A205A9D880D9A7D96C3\aspnetcore-runtime-x64.zip                                                               
+    42 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VisualStudio.VC.Llvm.Base.62FBCADC61898980BE61\payload.vsix                                                                   
+    40 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.VisualStudio.TeamExplorer.MinGit.A617CE16F75917D6816B\Microsoft.VisualStudio.TeamExplorer.MinGit.vsix                         
+  37,3 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.Net.10.0.WindowsDesktop.Runtime.FE05B895AF351B24FBE7\windowsdesktop-runtime-x64.zip                                           
+  35,1 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.Net.8.0.WindowsDesktop.Runtime.10121473D0B8B9FD47A8\windowsdesktop-runtime-x64.zip                                            
+  31,6 C:\Users\lamby\Downloads\njRAT v0.9d.7z                                                                                                                                            
+  28,7 C:\Users\lamby\AppData\Local\Temp\i34m0es2\Microsoft.WindowsDesktop.SharedFramework.10.0.10.0.12.85990DE418AD11FAF801\windowsdesktop-runtime-10.0.12-win-x64.msi                   
+
+
+

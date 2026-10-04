@@ -1507,9 +1507,26 @@ async def run_tool_task(ws, name, args, timeout, rid):
     else:
         ai_log("ERR", f"{name} FAILED: {res.get('error') or summary}")
     try:
-        await ws.send(json.dumps({"type": "tool_result", "id": rid, **res}))
+        await ws.send(json.dumps({"type": "tool_result", "id": rid, "name": name, **res}))
     except websockets.ConnectionClosed:
         pass
+    # Broadcast the tool call to EVERY other connected client (e.g. the LamByy
+    # desktop app), so it can render a live chip for a tool the extension ran.
+    # id is omitted so nobody mistakes it for the answer to their own request.
+    ev = json.dumps({
+        "type": "tool_event", "name": name,
+        "ok": bool(res.get("ok")),
+        "error": res.get("error") or "",
+        "text": (res.get("text") or "")[:4000],
+        "elapsed": round(elapsed, 2),
+    })
+    for c in list(clients):
+        if c is ws:
+            continue
+        try:
+            await c.send(ev)
+        except Exception:
+            pass
 
 
 async def broadcast_status():

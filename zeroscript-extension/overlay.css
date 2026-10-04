@@ -154,6 +154,21 @@ html.zs-light #zs-bar.zs-bar-anchored {
    radius so both edges clear the corners cleanly. */
 #zs-bar.zs-bar-anchored.zs-prov-meta { padding-left: 30px; padding-right: 30px; }
 
+/* Claude: card look like Gemini's inline bar (surface + full border + radius) */
+#zs-bar.zs-bar-anchored.zs-prov-claude {
+  background: #262624 !important;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 7px 12px;
+}
+html.zs-light #zs-bar.zs-bar-anchored.zs-prov-claude {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+#zs-bar.zs-prov-claude #zs-brand,
+#zs-bar.zs-prov-claude #zs-action,
+#zs-bar.zs-prov-claude #zs-state b { font-weight: 500; }
+
 #zs-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; cursor: help; }
 #zs-dot.on { background: #34d399; box-shadow: 0 0 8px #34d399; }
 #zs-dot.warn { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
